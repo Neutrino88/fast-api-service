@@ -93,6 +93,15 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(response.headers['content-type'], 'text/html; charset=utf-8')
         self.assertEqual(response.content, html_content.encode())
 
+    def test_view_images_page(self):
+        with open('frontend/view_images.html', encoding='utf-8') as file:
+            html_content = ''.join(file.readlines())
+
+        response = self.client.get('/view_images')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers['content-type'], 'text/html; charset=utf-8')
+        self.assertEqual(response.content, html_content.encode())
+
     def test_negative_image(self):
         image = self.images[0]
         neg_image = ImageModifier(image).inverted_img
