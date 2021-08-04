@@ -107,3 +107,26 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(json['is_negative'], True)
         # uuid is correct
         uuid_ = uuid.UUID(json['uuid'])
+
+    def test_get_last_images(self):
+        exp_pairs = []
+        # send images
+        for img in self.images:
+            response = self.client.post('/negative_image', json={'image': img})
+            self.assertEqual(response.status_code, 200)
+            json = response.json()
+            exp_pairs.append({'image': img, 'neg_image': json['image'], 'uuid': json['uuid']})
+
+        # get last image pairs
+        response = self.client.get('/get_last_images')
+        pairs = response.json()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers['content-type'], 'application/json')
+        self.assertIsInstance(pairs, list)
+        self.assertLessEqual(len(pairs), 3)
+
+        # compare
+        pairs.sort(key=lambda x: x['uuid'])
+        exp_pairs = sorted(exp_pairs, key=lambda x: x['uuid'])
+        self.assertListEqual(exp_pairs, pairs)
