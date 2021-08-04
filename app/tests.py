@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 import models
 import schemas
 from main import app
+from image_modifier import ImageModifier
 
 
 class ModelsImageTestCase(unittest.TestCase):
@@ -77,6 +78,11 @@ class ApiTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.client = TestClient(app)
+        cls.images = [
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJgggAA',
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP4/4bhPwAHxALroVDe1AAAAABJRU5ErkJgggAA',
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWMI/s/wHwAFTQJSoODuKAAAAABJRU5ErkJgggAA',
+        ]
 
     def test_index_page(self):
         with open('frontend/index.html', encoding='utf-8') as file:
@@ -88,19 +94,16 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(response.content, html_content.encode())
 
     def test_negative_image(self):
-        image = {'image': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACXBIWXMAAA7zAAAO8wEcU5k6AAAAEXRFWHRUaXRsZQBQREYgQ3JlYXRvckFevCgAAAATdEVYdEF1dGhvcgBQREYgVG9vbHMgQUcbz3cwAAAALXpUWHREZXNjcmlwdGlvbgAACJnLKCkpsNLXLy8v1ytISdMtyc/PKdZLzs8FAG6fCPGXryy4AAAACklEQVQIHWNgAAAAAgABz8g15QAAAABJRU5ErkJggg=='}
-        exp_json = {
-            'image': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGP4DwABAQEAsTj2FAAA\nAABJRU5ErkJggg==\n',
-            'uuid': '',
-            'is_negative': True,
-        }
-        response = self.client.post('/negative_image', json=image)
+        image = self.images[0]
+        neg_image = ImageModifier(image).inverted_img
+
+        response = self.client.post('/negative_image', json={'image': image})
         json = response.json()
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['content-type'], 'application/json')
-        self.assertListEqual(list(json.keys()), list(exp_json.keys()))
-        self.assertEqual(json['image'], exp_json['image'])
+        self.assertSetEqual(set(json.keys()), {'image', 'uuid', 'is_negative'})
+        self.assertEqual(json['image'], neg_image)
         self.assertEqual(json['is_negative'], True)
         # uuid is correct
         uuid_ = uuid.UUID(json['uuid'])
