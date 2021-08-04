@@ -1,0 +1,13 @@
+# app
+fastapi==0.68.0
+uvicorn==0.14.0
+aiofiles==0.7.0
+Pillow==8.3.1
+# db
+psycopg2-binary==2.9.1
+sqlalchemy==1.4.22
+# if python version < 3.7
+async-exit-stack
+async-generator
+# testing
+requests==2.26.0
